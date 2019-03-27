@@ -1,69 +1,151 @@
-/**
- * Created by lenovo on 2019/3/26.
- */
+export default `
+如何在React中做Ajax 请求？
+
+首先：React本身没有独有的获取数据的方式.实际上，就react而言，它甚至不知道有服务器画面的存在。
+
+React只是简单地渲染组件，单独从两个地方获取数据：props 和 state。
+
+因此，为了使用服务器的数据，你需要在你的组件（component）的props或state里拿到数据。
+
+你可以将这个过程与服务和数据模型复杂化，就像你所希望的那样，但最终只是组件渲染props和state。
+
+选择一个HTTP 库
+
+为了获取来自服务器的数据，你需要一个HTTP库，网上有很多，最终他们都做同样的事情，但他们有不同的特点。
+
+喜欢 Promise？那就选axios吧：https://github.com/mzabriskie/axios
+
+讨厌Promise?，但是喜欢callback？不妨看看superagent？https://github.com/visionmedia/superagent
+
+当然，你也可以选择自己封装一个ajax库，我喜欢Axios，下面将以这个库作为例子，如果你不喜欢，可以选择其他库看看。
+
+npm install axios 
+
+yarn add axios 
+
+\`\`\`jsx
+
 import React from 'react';
-class UserGist extends React.Component {
-    constructor(props,context) {
-        super(props, context);
-        //在state设置两个属性，以便后续通过state对象来对其进行修改
-        this.state = {username: '', lastGistUrl: '',content:null};
-        //绑定挂载事件
-        this.componentDidMount = this.componentDidMount.bind(this);
-    }
 
+import ReactDOM from 'react-dom';
 
-//网络请求方法
-/*
-    Add = () => {
-        var formData = new FormData($("#userForm")[0]);  // 定位到userForm表单，并将表单定位转为FormData对象
-        $.ajax({
-            url: '/add',   //网络请求url地址
-            type: 'POST',
-            data: formData, //表单数据
-            async:false,
-            cache: false,
-            contentType: false,  //或者 contentType:multipart/form-data均可以，multipart/form-data表示可以上传下载文件（既可以发送文本数据，也支持二进制数据上载），表明传输的数据要用到多媒体传输协议，由于多媒体传输的都是大量的数据，所以规定上传文件必须是post方法；contentType默认为application/x-www-form-urlencoded不能上传文件
-            processData: false,
-            success: function (data) {
-                console.log('成功'); this.setState({content:'修改成功'})
-            }.bind(this),
-            error: function (xhr, status, err) {
-            }.bind(this)
+import axios from 'axios';
+
+class FetchDemo extends React.Component {
+
+  constructor(props) {
+
+    super(props);
+
+    this.state = {
+
+      posts: []
+
+    };
+
+  }
+
+componentDidMount(){
+
+    axios.get('http://www.reddit.com/r/\${this.props.subreddit}.json')
+        .then(res => {
+
+            const posts = res.data.data.children.map(obj => obj.data);
+
+            this.setState({posts});
+
         });
-    }
-*/
 
-    componentDidMount() {
-        //接下来操作state时上下文对象发生改变，此处拿到操作句柄
-        const that = this;
-        //ajax请求
-/*        this.serverRequest =$.ajax({
-            url: this.props.source,
-            type:"GET",
-            dataType: 'jsonp',
-            success: function (result) {
-                console.log(result.data);
-                const lastGist = result.data[0];
-                //此处的上下文发生改变，this的指针指向发生了变化，通过上述定义的that来操作
-                that.setState({
-                    username: lastGist.owner.login,
-                    lastGistUrl: lastGist.html_url
-                })
-            }
-        })*/
-    }
-
-    //卸载React组件时，把多余请求关闭，以免影响其他框架或组件的操作
-    componentWillUnmount() {
-        this.serverRequest.abort();
-    }
-
-    render() {
-        return (
-            <div>
-                {this.state.username} 用户最新的 Gist 共享地址：
-                <a href={this.state.lastGistUrl} rel="nofollow">{this.state.lastGistUrl}</a>
-            </div>
-        );
-    }
 }
+render() {
+    return (
+            <div>
+
+        <h1>\${this.props.subreddit}</h1>
+        <ul>
+
+          {this.state.posts.map(post =>
+
+            <li key={post.id}>{post.title}</li>
+
+          )}
+
+        </ul>
+
+      </div>
+    );
+  }
+
+ReactDOM.render(
+
+  <FetchDemo subreddit="reactjs"/>,
+
+  document.getElementById('root')
+
+);
+
+\`\`\`
+`
+
+/*
+
+ \`\`\`jsx
+ import React from 'react';
+ import axios from 'axios';
+ class UserGist extends React.Component {
+ constructor(props, context) {
+ super(props, context);
+ //在state设置两个属性，以便后续通过state对象来对其进行修改
+ this.state = {username: '', lastGistUrl: '', content: null, posts: []};
+ //绑定挂载事件
+ this.componentDidMount = this.componentDidMount.bind(this);
+ }
+
+ componentDidMount() {
+
+ axios.get(`
+ http://www.reddit.com/r/${this.props.subreddit}.json`)
+
+ .
+ then(res => {
+
+ const posts = res.data.data.children.map(obj => obj.data);
+
+ this.setState({posts});
+
+ });
+
+ }
+ ;
+ \
+ `\`\`
+
+ \`\`\`jsx
+ //卸载React组件时，把多余请求关闭，以免影响其他框架或组件的操作
+ componentWillUnmount() {
+ this.serverRequest.abort();
+ }
+
+ render() {
+ return (
+ <div>
+ <div>
+ <h1>{`
+ /r/${this.props.subreddit}`}</h1>
+
+ <ul>
+
+ {this.state.posts.map(post =>
+
+ <li key={post.id}>{post.title}</li>
+ )}
+
+ </ul>
+
+ </div>
+ </div>
+ );
+ }
+ }
+ \`\`\`
+ */
